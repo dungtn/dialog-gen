@@ -30,7 +30,7 @@ class DynamicMemoryCell( tf.contrib.rnn.RNNCell):
         """
         We initialize the memory to the key values.
         """
-        zero_state = tf.concat(1, [tf.expand_dims(key, 0) for key in self._keys])
+        zero_state = tf.concat([tf.expand_dims(key, 0) for key in self._keys], 1)
         zero_state_batch = tf.tile(zero_state, tf.pack([batch_size, 1]))
         return zero_state_batch
 
@@ -83,5 +83,5 @@ class DynamicMemoryCell( tf.contrib.rnn.RNNCell):
                 state_j_next = tf.nn.l2_normalize(state_j_next, -1, epsilon=1e-7) # TODO: Is epsilon necessary?
 
                 next_states.append(state_j_next)
-            state_next = tf.concat(1, next_states)
+            state_next = tf.concat(next_states, 1)
         return state_next, state_next
