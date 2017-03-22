@@ -105,7 +105,7 @@ def get_output(last_state, encoded_query, num_blocks, vocab_size,
     [End-To-End Memory Networks](https://arxiv.org/abs/1502.01852).
     """
     with tf.variable_scope(scope, 'Output', initializer=initializer):
-        last_state = tf.pack(tf.split(1, num_blocks, last_state), axis=1)
+        last_state = tf.stack(tf.split(last_state, num_blocks, 1), axis=1)
         _, _, embedding_size = last_state.get_shape().as_list()
 
         # Use the encoded_query to attend over memories (hidden states of dynamic last_state cell blocks)
