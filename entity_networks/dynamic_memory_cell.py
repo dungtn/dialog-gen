@@ -31,7 +31,7 @@ class DynamicMemoryCell( tf.contrib.rnn.RNNCell):
         We initialize the memory to the key values.
         """
         zero_state = tf.concat([tf.expand_dims(key, 0) for key in self._keys], 1)
-        zero_state_batch = tf.tile(zero_state, tf.pack([batch_size, 1]))
+        zero_state_batch = tf.tile(zero_state, tf.stack([batch_size, 1]))
         return zero_state_batch
 
     def get_gate(self, state_j, key_j, inputs):
