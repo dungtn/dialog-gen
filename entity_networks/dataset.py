@@ -17,9 +17,11 @@ class Dataset(object):
             metadata = json.load(f)
 
         self.max_sentence_length = metadata['max_sentence_length']
-        self.max_story_length = metadata['max_story_length']
+        self.max_story_length = metadata['max_dialog_length']
         self.max_query_length = metadata['max_query_length']
-        self.dataset_size = metadata['dataset_size']
+        self.max_answer_length = metadata['max_answer_length']
+        self.dataset_train_size = metadata['dataset_train_size']
+        self.dataset_test_size = metadata['dataset_test_size']
         self.vocab_size = metadata['vocab_size']
         self.tokens = metadata['tokens']
         self.datasets = metadata['datasets']
@@ -31,9 +33,9 @@ class Dataset(object):
     def get_input_fn(self, name, num_epochs, shuffle):
         def input_fn():
             features = {
-                "story": tf.FixedLenFeature([self.max_story_length, self.max_sentence_length], dtype=tf.int64),
+                "dialog": tf.FixedLenFeature([self.max_dialog_length, self.max_sentence_length], dtype=tf.int64),
                 "query": tf.FixedLenFeature([1, self.max_query_length], dtype=tf.int64),
-                "answer": tf.FixedLenFeature([], dtype=tf.int64),
+                "answer": tf.FixedLenFeature([1, self.max_answer_length], dtype=tf.int64),
             }
 
             dataset_path = os.path.join(self.dataset_dir, self.datasets[name])
@@ -43,9 +45,9 @@ class Dataset(object):
                 randomize_input=shuffle,
                 num_epochs=num_epochs)
 
-            story = features['story']
+            dialog = features['dialog']
             query = features['query']
             answer = features['answer']
 
-            return {'story': story, 'query': query}, answer
+            return {'dialog': dialog, 'query': query}, answer
         return input_fn

@@ -5,6 +5,7 @@ from __future__ import division
 import numpy as np
 import tensorflow as tf
 
+
 class DynamicMemoryCell( tf.contrib.rnn.RNNCell):
     """
     Implementation of a dynamic memory cell as a gated recurrent network.

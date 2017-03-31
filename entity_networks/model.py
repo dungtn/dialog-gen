@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-import numpy as np
 import tensorflow as tf
 
 from functools import partial
@@ -11,16 +10,17 @@ from entity_networks.activations import prelu
 from entity_networks.dynamic_memory_cell import DynamicMemoryCell
 from entity_networks.model_utils import get_sequence_length
 
+
 def model_fn(features, labels, params, mode, scope=None):
     embedding_size = params['embedding_size']
     num_blocks = params['num_blocks']
     vocab_size = params['vocab_size']
     debug = params['debug']
 
-    story = features['story']
+    dialog = features['dialog']
     query = features['query']
 
-    batch_size = tf.shape(story)[0]
+    batch_size = tf.shape(dialog)[0]
 
     normal_initializer = tf.random_normal_initializer(stddev=0.1)
     ones_initializer = tf.constant_initializer(1.0)
@@ -38,11 +38,11 @@ def model_fn(features, labels, params, mode, scope=None):
             shape=[vocab_size, 1])
         embedding_params_masked = embedding_params * embedding_mask
 
-        story_embedding = tf.nn.embedding_lookup(embedding_params_masked, story)
+        dialog_embedding = tf.nn.embedding_lookup(embedding_params_masked, dialog)
         query_embedding = tf.nn.embedding_lookup(embedding_params_masked, query)
 
         # Input Module
-        encoded_story = get_input_encoding(story_embedding, ones_initializer, 'StoryEncoding')
+        encoded_story = get_input_encoding(dialog_embedding, ones_initializer, 'DialogEncoding')
         encoded_query = get_input_encoding(query_embedding, ones_initializer, 'QueryEncoding')
 
         # Memory Module
@@ -74,7 +74,7 @@ def model_fn(features, labels, params, mode, scope=None):
 
         if debug:
             tf.contrib.layers.summarize_tensor(sequence_length, 'sequence_length')
-            tf.contrib.layers.summarize_tensor(encoded_story, 'encoded_story')
+            tf.contrib.layers.summarize_tensor(encoded_story, 'encoded_dialog')
             tf.contrib.layers.summarize_tensor(encoded_query, 'encoded_query')
             tf.contrib.layers.summarize_tensor(last_state, 'last_state')
             tf.contrib.layers.summarize_tensor(output, 'output')
@@ -83,6 +83,7 @@ def model_fn(features, labels, params, mode, scope=None):
             tf.add_check_numerics_ops()
 
         return prediction, loss, train_op
+
 
 def get_input_encoding(embedding, initializer=None, scope=None):
     """
@@ -95,6 +96,7 @@ def get_input_encoding(embedding, initializer=None, scope=None):
         positional_mask = tf.get_variable('positional_mask', [max_sentence_length, 1])
         encoded_input = tf.reduce_sum(embedding * positional_mask, reduction_indices=[2])
         return encoded_input
+
 
 def get_output(last_state, encoded_query, num_blocks, vocab_size,
         activation=tf.nn.relu,
@@ -127,10 +129,12 @@ def get_output(last_state, encoded_query, num_blocks, vocab_size,
         y = tf.matmul(activation(q + tf.matmul(u, H)), R)
         return y
 
+
 def get_loss(output, labels, mode):
     if mode == tf.contrib.learn.ModeKeys.INFER:
         return None
     return tf.contrib.losses.sparse_softmax_cross_entropy(output, labels)
+
 
 def get_train_op(loss, params, mode):
     if mode != tf.contrib.learn.ModeKeys.TRAIN:
